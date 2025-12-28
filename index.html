@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="オレオレPop">
-<title>俺のオレンジコート - v64.0 Climax BGM</title>
+<title>俺のオレンジコート - v65.0 Nightmare</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -941,7 +941,7 @@ const Sound = (function() {
     tempo: 150, len: 64,
     mel: [F.A4,F.x, F.A4,F.B4, F.C5,F.x, F.A4,F.x, F.E5,F.x, F.D5,F.x, F.C5,F.B4, F.A4,F.G4, F.F4,F.x, F.F4,F.G4, F.A4,F.x, F.F4,F.x, F.C5,F.x, F.B4,F.x, F.A4,F.G4, F.F4,F.E4, F.D4,F.x, F.F4,F.x, F.A4,F.x, F.D5,F.x, F.B4,F.x, F.G4,F.x, F.D4,F.x, F.B3,F.x, F.E4,F.x, F.GS4,F.x, F.B4,F.x, F.E5,F.x, F.A4,F.x, F.x,F.x, F.x,F.x, F.x,F.x],
     bass: [F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.E3,F.E2, F.E3,F.E2, F.E3,F.E2, F.E3,F.E2, F.A3,F.A2, F.A3,F.A2, F.A3,F.x, F.A3,F.x],
-    drm: ['K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K','K','S','S', 'K',0,'S',0],
+    drm: ['K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K','K','S','S', 'K',0,'S',0],
     arp: []
   };
   // 3. Finals BGM: "Burning Legend" (178 BPM, High Energy Arp)
@@ -956,7 +956,7 @@ const Sound = (function() {
   function scheduler() {
     let song = Daily;
     if(currentBgmType === 'match') song = Match;
-    if(currentBgmType === 'finals') song = Finals; // v64.0
+    if(currentBgmType === 'finals') song = Finals; 
     
     const noteLen = 60 / song.tempo / 4; 
     const lookahead = 0.1;
@@ -1087,13 +1087,48 @@ let G = {
 };
 let tempOrder = [];
 
+// v65.0: 敵チーム名生成
+const E_PRE = ["北","南","東","西","中央","帝","王","龍","桜","白","黒","青","赤","光","闇","星","海","山","川","空","風","雷","火","水","土","金","木"];
+const E_SUF = ["工業","商業","実業","学園","学院","高校","大附属","北","南","東","西","第一","第二","第三"];
+const E_TYPE = [
+  {n:"バランス", atk:1.0, def:1.0}, 
+  {n:"攻撃特化", atk:1.2, def:0.8}, 
+  {n:"鉄壁", atk:0.8, def:1.3}, 
+  {n:"技巧派", atk:1.1, def:1.1} // 全体的に少し強い
+];
+
+function GenerateEnemy(round, isNat) {
+  const name = E_PRE[Math.floor(Math.random()*E_PRE.length)] + E_SUF[Math.floor(Math.random()*E_SUF.length)];
+  const type = E_TYPE[Math.floor(Math.random()*E_TYPE.length)];
+  
+  // v65.0: 難易度曲線 (Nightmare Balance)
+  let diffMult = 1.0;
+  if(!isNat) {
+    if(round <= 2) diffMult = 0.9; // 予選序盤 (格下)
+    else if(round <= 4) diffMult = 1.05; // 予選中盤 (同格)
+    else diffMult = 1.25; // 予選決勝 (格上)
+  } else {
+    if(round <= 4) diffMult = 1.35; // 全国 (超格上)
+    else diffMult = 1.5; // 全国決勝 (ラスボス)
+  }
+  
+  // プレイヤー基準の強さ算出
+  const myTotal = G.starters.reduce((a,b)=>a+(Object.values(b.stats).reduce((x,y)=>x+y,0)/8),0)/6;
+  const basePow = myTotal * diffMult;
+  
+  // ゆらぎ
+  const pow = Math.floor(basePow + (Math.random()*10 - 5));
+  
+  return { name: name, type: type, pow: pow };
+}
+
 window.onload = function() {
   window.onerror = function(msg) {
     const p = document.getElementById("m-cmd");
     if(p) { p.innerHTML = `<div style="color:red; grid-column:span 2;">ERR: ${msg}</div>`; document.getElementById("btn-force").style.display = "block"; }
   };
   try {
-    const save = localStorage.getItem("EIKAN_V64_0_CLIMAX");
+    const save = localStorage.getItem("EIKAN_V65_0_NIGHTMARE");
     if (save) {
       const d = JSON.parse(save); 
       d.team.forEach(p => {
@@ -1118,7 +1153,7 @@ window.onload = function() {
 
 function HardReset() { 
   if(confirm("全データを削除して初期化しますか？")) { 
-    localStorage.removeItem("EIKAN_V64_0_CLIMAX"); location.reload(); 
+    localStorage.removeItem("EIKAN_V65_0_NIGHTMARE"); location.reload(); 
   } 
 }
 
@@ -1277,20 +1312,28 @@ function StartMatch(name, round, isNat) {
   
   G.match.isMyServe = Math.random() < 0.5;
   G.match.flow = 0; G.match.to = 2; G.match.auto = false; UpdateTOBtn();
-  const totalStats = G.starters.reduce((a,b)=>a+(Object.values(b.stats).reduce((x,y)=>x+y,0)/8),0)/6;
-  let floor = 20; let mod = -10+Math.random()*20; if(name!=="練習試合") { if(round>=3 && !isNat) floor = 45 + round*5; else if(!isNat) floor = 25+round*5; if(isNat) floor = 75 + round*5; mod = (round-1)*10 - 5 + (isNat?40:0); }
-  G.match.pow = Math.max(floor, totalStats + mod + (Math.random()*6-3));
+  
+  // v65.0: New Enemy Generator
+  let enemyData = null;
+  if (name === "練習試合") {
+      enemyData = { name: "近所の高校", type: {n:"練習相手", atk:0.8, def:0.8}, pow: Math.floor(20 + G.lv * 0.5) };
+  } else {
+      enemyData = GenerateEnemy(round, isNat);
+  }
+  
+  G.match.pow = enemyData.pow;
+  G.match.enemyType = enemyData.type; // Save type for logic use later if needed
+  
   document.getElementById('ui-match').style.display = 'block'; 
-  document.getElementById('m-info').innerText = `${name} ${isNat?'全国':''} ${round}回戦 (敵:${Math.floor(G.match.pow)})`;
+  document.getElementById('m-info').innerHTML = `${name} ${isNat?'全国':''} ${round}回戦<br><span style="color:var(--lose); font-size:1.2em;">${enemyData.name}</span><br><span style="font-size:0.8em; color:#ccc;">タイプ:${enemyData.type.n} / 総合力:${enemyData.pow}</span>`;
   document.getElementById('m-log').innerHTML = ""; document.getElementById('m-end').style.display='none'; document.getElementById('btn-next-rd').style.display='none'; document.getElementById('btn-force').style.display='none';
   
   Sound.playSE('whistle'); 
   
-  // v64.0: BGM Logic (Round 5 = Finals)
   let bgmType = 'match';
   if (G.match.round === 5) {
       bgmType = 'finals';
-      Log("🔥 決勝戦！気合を入れろ！", "var(--accent)", true);
+      Log("🔥 決勝戦！相手は格上だ！", "var(--accent)", true);
   }
   Sound.playBGM(bgmType);
   
@@ -1390,7 +1433,10 @@ function NextCmd() {
     if(HasSkill(p,'trust') && G.match.my < G.match.opp) { pow+=10; tec+=10; jmp+=10; spd+=10; }
     if(HasSkill(p,'dump') && lbl==='ツー') { pow+=7; tec+=7; } if(HasSkill(p,'feint')) tec+=8;
     const basePower = ((pow+tec+jmp+spd)/4)*condMod * (1.0 + flowBonus); 
+    // v65.0: Enemy Type Logic
     let enemyDef = G.match.pow * 0.9;
+    if(G.match.enemyType && G.match.enemyType.def) enemyDef *= G.match.enemyType.def;
+    
     if(HasSkill(p,'blockout')) enemyDef *= 0.9; if(HasSkill(p,'circular')) enemyDef -= 10;
     let est = Math.floor(Math.min(99, Math.max(5, (20 + (basePower*1.2+hBonus)*(sTos/100)*0.8 - (enemyDef * 0.5)) * rate)));
     if(HasSkill(p,'feint')) est += 8; if(G.match.last===p.id) est-=15;
@@ -1458,10 +1504,15 @@ function AutoAction() {
   document.getElementById('m-cmd').innerHTML = "";
   const zone = Math.floor(Math.random() * 3);
   const flowBonus = Math.max(0, G.match.flow * -0.1); 
-  let enP = G.match.pow * (0.9 + Math.random()*0.3) * (1.0 + flowBonus);
+  
+  // v65.0: Enemy Type Logic
+  let typeMod = G.match.enemyType && G.match.enemyType.atk ? G.match.enemyType.atk : 1.0;
+  let enP = G.match.pow * typeMod * (0.9 + Math.random()*0.3) * (1.0 + flowBonus);
   
   if(!G.match.isMyServe) {
-      if(Math.random() < 0.1) { Log("相手のサービスエース...", "var(--lose)"); Score(false, false); return; }
+      let aceRate = 0.1;
+      if(typeMod > 1.1) aceRate = 0.15; // Attack type has strong serve
+      if(Math.random() < aceRate) { Log("相手のサービスエース...", "var(--lose)"); Score(false, false); return; }
       if(Math.random() < 0.1) { Log("相手のサーブミス！", "var(--ok)"); Score(true, false); return; }
   }
 
@@ -1514,7 +1565,7 @@ function AutoAction() {
   }
 }
 
-function Save() { const d = { team: G.team, date: G.date, lv: G.lv, next: G.match.next, winSpr: G.match.winSpr, played: G.match.played, sIds: G.starters.map(p=>p?p.id:null), lId: G.libero?G.libero.id:null, pracMonth: G.pracMonth, scouted: G.scouted, scoutDone: G.scoutDone, isMyServe: G.match.isMyServe }; localStorage.setItem("EIKAN_V64_0_CLIMAX", JSON.stringify(d)); }
+function Save() { const d = { team: G.team, date: G.date, lv: G.lv, next: G.match.next, winSpr: G.match.winSpr, played: G.match.played, sIds: G.starters.map(p=>p?p.id:null), lId: G.libero?G.libero.id:null, pracMonth: G.pracMonth, scouted: G.scouted, scoutDone: G.scoutDone, isMyServe: G.match.isMyServe }; localStorage.setItem("EIKAN_V65_0_NIGHTMARE", JSON.stringify(d)); }
 
 function Log(msg, color, big=false) { 
   const div = document.createElement('div'); div.className = 'l-row' + (big?' log-big':''); 
@@ -1561,52 +1612,7 @@ function FinishMatch() {
   Save(); 
 }
 function EndMatchUI() { document.getElementById('ui-match').style.display='none'; UpdateUI(); Sound.playBGM('daily'); }
-
-// v63.2: 修正 (リベロ除外)
-function ShowOrder() { 
-  tempOrder = [...G.starters]; 
-  const list = document.getElementById('ord-court'); 
-  list.innerHTML = ""; 
-  const mapIdx = [0, 1, 2, 5, 4, 3]; 
-  for(let i=0; i<6; i++) { 
-    const idx = mapIdx[i]; 
-    const isBack = i >= 3; 
-    const div = document.createElement('div'); 
-    div.className = "pos-edit" + (isBack ? " back" : ""); 
-    let posLbl = ""; 
-    if(idx===0) posLbl="前左(4)"; 
-    else if(idx===1) posLbl="前中(3)"; 
-    else if(idx===2) posLbl="前右(2)"; 
-    else if(idx===5) posLbl="後左(5)"; 
-    else if(idx===4) posLbl="後中(6)"; 
-    else if(idx===3) posLbl="後右(1)SRV"; 
-    div.innerHTML = `<label>${posLbl}</label>`; 
-    const sel = document.createElement('select'); 
-    sel.innerHTML = `<option value="">---</option>` + G.team.filter(p=>p.pos!=='L').map(p=>`<option value="${p.id}" ${tempOrder[idx]&&tempOrder[idx].id===p.id?'selected':''}>${p.name} (${p.pos})</option>`).join(''); 
-    sel.onchange = function() { 
-      const nid = this.value; 
-      if(nid) { 
-        const dup = tempOrder.findIndex((p, x) => x!==idx && p && p.id===nid); 
-        if(dup !== -1) { 
-          const old = tempOrder[idx]; 
-          tempOrder[idx] = G.team.find(p=>p.id===nid); 
-          tempOrder[dup] = old; 
-          ShowOrder(); 
-          return; 
-        } 
-        tempOrder[idx] = G.team.find(p=>p.id===nid); 
-      } else { 
-        tempOrder[idx] = null; 
-      } 
-    }; 
-    div.appendChild(sel); 
-    list.appendChild(div); 
-  } 
-  const lsel = document.getElementById('sel-lib'); 
-  lsel.innerHTML = `<option value="">なし</option>` + G.team.filter(p=>p.pos==='L').map(p => `<option value="${p.id}" ${G.libero&&G.libero.id===p.id?'selected':''}>${p.name}</option>`).join(''); 
-  document.getElementById('ui-order').style.display='flex'; 
-}
-
+function ShowOrder() { tempOrder = [...G.starters]; const list = document.getElementById('ord-court'); list.innerHTML = ""; const mapIdx = [0, 1, 2, 5, 4, 3]; for(let i=0; i<6; i++) { const idx = mapIdx[i]; const isBack = i >= 3; const div = document.createElement('div'); div.className = "pos-edit" + (isBack ? " back" : ""); let posLbl = ""; if(idx===0) posLbl="前左(4)"; else if(idx===1) posLbl="前中(3)"; else if(idx===2) posLbl="前右(2)"; else if(idx===5) posLbl="後左(5)"; else if(idx===4) posLbl="後中(6)"; else if(idx===3) posLbl="後右(1)SRV"; div.innerHTML = `<label>${posLbl}</label>`; const sel = document.createElement('select'); sel.innerHTML = `<option value="">---</option>` + G.team.filter(p=>p.pos!=='L').map(p=>`<option value="${p.id}" ${tempOrder[idx]&&tempOrder[idx].id===p.id?'selected':''}>${p.name} (${p.pos})</option>`).join(''); sel.onchange = function() { const nid = this.value; if(nid) { const dup = tempOrder.findIndex((p, x) => x!==idx && p && p.id===nid); if(dup !== -1) { const old = tempOrder[idx]; tempOrder[idx] = G.team.find(p=>p.id===nid); tempOrder[dup] = old; ShowOrder(); return; } tempOrder[idx] = G.team.find(p=>p.id===nid); } else { tempOrder[idx] = null; } }; div.appendChild(sel); list.appendChild(div); } const lsel = document.getElementById('sel-lib'); lsel.innerHTML = `<option value="">なし</option>` + G.team.filter(p=>p.pos==='L').map(p => `<option value="${p.id}" ${G.libero&&G.libero.id===p.id?'selected':''}>${p.name}</option>`).join(''); document.getElementById('ui-order').style.display='flex'; }
 function CommitOrder() { G.starters = [...tempOrder]; const lid = document.getElementById('sel-lib').value; G.libero = lid ? G.team.find(p=>p.id===lid) : null; document.getElementById('ui-order').style.display='none'; UpdateUI(); Save(); }
 function CloseOrder() { CommitOrder(); }
 
