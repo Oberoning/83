@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="オレオレPop">
-<title>俺のオレンジコート - v63.2 Libero Fix</title>
+<title>俺のオレンジコート - v64.0 Climax BGM</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -838,8 +838,8 @@
         <p>毎年11月に<b>スカウト</b>が可能。ランク評価を頼りに原石を見つけましょう。獲得選手は4月に入部します。</p>
       </div>
       <div class="help-sec">
-        <h4>4. サウンド (v62)</h4>
-        <p>BGMと効果音に対応しました。左上のスピーカーボタンでミュート切替可能です。</p>
+        <h4>4. サウンド (v64)</h4>
+        <p>BGMと効果音に対応。<b>決勝戦</b>では特別なBGMが流れます。</p>
       </div>
       <button class="btn btn-g" onclick="CloseHelp()">理解した</button>
     </div>
@@ -849,7 +849,7 @@
 
 <script>
 // ==========================================
-// 🎵 Sound Engine (v62.0)
+// 🎵 Sound Engine (v64.0)
 // ==========================================
 const Sound = (function() {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -921,8 +921,14 @@ const Sound = (function() {
     }
   }
 
-  const F = { C3:130.8, D3:146.8, E3:164.8, F3:174.6, G3:196.0, A3:220.0, B3:246.9, C4:261.6, D4:293.7, E4:329.6, F4:349.2, G4:392.0, A4:440.0, B4:493.9, C5:523.3, D5:587.3, E5:659.3, x:0 };
+  // Note Data
+  const F = { 
+    A2:110.0, C3:130.8, D3:146.8, E3:164.8, F3:174.6, G3:196.0, 
+    A3:220.0, B3:246.9, C4:261.6, D4:293.7, E4:329.6, F4:349.2, G4:392.0, GS4:415.3, 
+    A4:440.0, B4:493.9, C5:523.3, D5:587.3, E5:659.3, F5:698.5, G5:784.0, A5:880.0, x:0 
+  };
   
+  // 1. Daily BGM: "Orange Breeze" (110 BPM)
   const Daily = {
     tempo: 110, len: 64,
     mel: [F.A4,F.x, F.G4,F.x, F.F4,F.x, F.G4,F.x, F.E4,F.x, F.x,F.x, F.D4,F.E4, F.F4,F.G4, F.A4,F.x, F.C5,F.x, F.B4,F.x, F.G4,F.x, F.A4,F.x, F.x,F.x, F.x,F.x, F.x,F.x, F.F4,F.x, F.A4,F.x, F.G4,F.x, F.C5,F.x, F.B4,F.x, F.G4,F.x, F.E4,F.x, F.C4,F.x, F.D4,F.x, F.x,F.x, F.E4,F.x, F.x,F.x, F.C4,F.x, F.x,F.x, F.x,F.x, F.x,F.x],
@@ -930,16 +936,28 @@ const Sound = (function() {
     bass: [F.F3,0,0,0, F.G3,0,0,0, F.E3,0,0,0, F.A3,0,0,0, F.F3,0,0,0, F.G3,0,0,0, F.A3,0,0,0, 0,0,0,0, F.F3,0,0,0, F.G3,0,0,0, F.E3,0,0,0, F.A3,0,0,0, F.D3,0,0,0, F.G3,0,0,0, F.C3,0,0,0, 0,0,0,0],
     drm: ['K',0,0,0, 'K',0,0,0, 'K',0,0,0, 'K',0,0,0, 'K',0,0,0, 'K',0,0,0, 'K',0,0,0, 'K',0,0,0, 'K',0,0,0, 'K',0,0,0, 'K',0,0,0, 'K',0,0,0, 'K',0,0,0, 'K',0,0,0, 'K',0,0,0, 'K',0,0,0]
   };
+  // 2. Match BGM: "Court on Fire" (150 BPM)
   const Match = {
     tempo: 150, len: 64,
     mel: [F.A4,F.x, F.A4,F.B4, F.C5,F.x, F.A4,F.x, F.E5,F.x, F.D5,F.x, F.C5,F.B4, F.A4,F.G4, F.F4,F.x, F.F4,F.G4, F.A4,F.x, F.F4,F.x, F.C5,F.x, F.B4,F.x, F.A4,F.G4, F.F4,F.E4, F.D4,F.x, F.F4,F.x, F.A4,F.x, F.D5,F.x, F.B4,F.x, F.G4,F.x, F.D4,F.x, F.B3,F.x, F.E4,F.x, F.GS4,F.x, F.B4,F.x, F.E5,F.x, F.A4,F.x, F.x,F.x, F.x,F.x, F.x,F.x],
     bass: [F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.E3,F.E2, F.E3,F.E2, F.E3,F.E2, F.E3,F.E2, F.A3,F.A2, F.A3,F.A2, F.A3,F.x, F.A3,F.x],
-    drm: ['K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K','K','S','S', 'K',0,'S',0],
+    drm: ['K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K','K','S','S', 'K',0,'S',0],
     arp: []
+  };
+  // 3. Finals BGM: "Burning Legend" (178 BPM, High Energy Arp)
+  const Finals = {
+    tempo: 178, len: 64,
+    mel: [F.A4,F.x, F.A4,F.B4, F.C5,F.x, F.A4,F.x, F.E5,F.x, F.F5,F.E5, F.D5,F.C5, F.B4,F.G4, F.A4,F.x, F.A4,F.B4, F.C5,F.x, F.E5,F.x, F.F5,F.x, F.E5,F.D5, F.C5,F.B4, F.A4,F.G4, F.F4,F.x, F.A4,F.x, F.D5,F.x, F.A4,F.x, F.G4,F.x, F.B4,F.x, F.D5,F.x, F.G4,F.x, F.E4,F.x, F.GS4,F.x, F.B4,F.x, F.E5,F.x, F.A5,F.x, F.x,F.x, F.A5,F.x, F.x,F.x],
+    bass: [F.A2,F.A2, F.A2,F.A2, F.A2,F.A2, F.A2,F.A2, F.G2,F.G2, F.G2,F.G2, F.G2,F.G2, F.G2,F.G2, F.F2,F.F2, F.F2,F.F2, F.F2,F.F2, F.F2,F.F2, F.E2,F.E2, F.E2,F.E2, F.E2,F.E2, F.E2,F.E2, F.D2,F.D2, F.D2,F.D2, F.D2,F.D2, F.D2,F.D2, F.G2,F.G2, F.G2,F.G2, F.G2,F.G2, F.G2,F.G2, F.E2,F.E2, F.E2,F.E2, F.E2,F.E2, F.E2,F.E2, F.A2,F.A2, F.A2,F.A2, F.A2,F.x, F.A2,F.x],
+    arp: [F.A3,F.C4, F.E4,F.A4, F.A3,F.C4, F.E4,F.A4, F.A3,F.C4, F.E4,F.A4, F.A3,F.C4, F.E4,F.A4, F.F3,F.A3, F.C4,F.F4, F.F3,F.A3, F.C4,F.F4, F.F3,F.A3, F.C4,F.F4, F.F3,F.A3, F.C4,F.F4, F.D3,F.F3, F.A3,F.D4, F.D3,F.F3, F.A3,F.D4, F.G3,F.B3, F.D4,F.G4, F.G3,F.B3, F.D4,F.G4, F.E3,F.GS3, F.B3,F.E4, F.E3,F.GS3, F.B3,F.E4, F.A3,F.C4, F.E4,F.A4, F.A3,F.C4, F.E4,F.A4],
+    drm: ['K',0,'S',0, 'K',0,'S',0, 'K','K','S',0, 'K',0,'S','S', 'K',0,'S',0, 'K',0,'S',0, 'K','K','S',0, 'K',0,'S','S', 'K',0,'S',0, 'K',0,'S',0, 'K','K','S',0, 'K',0,'S','S', 'K',0,'S',0, 'K',0,'S',0, 'K','K','S',0, 'K',0,'S',0]
   };
 
   function scheduler() {
-    const song = currentBgmType === 'daily' ? Daily : Match;
+    let song = Daily;
+    if(currentBgmType === 'match') song = Match;
+    if(currentBgmType === 'finals') song = Finals; // v64.0
+    
     const noteLen = 60 / song.tempo / 4; 
     const lookahead = 0.1;
     while (nextTime < ctx.currentTime + lookahead) {
@@ -1075,7 +1093,7 @@ window.onload = function() {
     if(p) { p.innerHTML = `<div style="color:red; grid-column:span 2;">ERR: ${msg}</div>`; document.getElementById("btn-force").style.display = "block"; }
   };
   try {
-    const save = localStorage.getItem("EIKAN_V63_2_FIX");
+    const save = localStorage.getItem("EIKAN_V64_0_CLIMAX");
     if (save) {
       const d = JSON.parse(save); 
       d.team.forEach(p => {
@@ -1100,7 +1118,7 @@ window.onload = function() {
 
 function HardReset() { 
   if(confirm("全データを削除して初期化しますか？")) { 
-    localStorage.removeItem("EIKAN_V63_2_FIX"); location.reload(); 
+    localStorage.removeItem("EIKAN_V64_0_CLIMAX"); location.reload(); 
   } 
 }
 
@@ -1149,15 +1167,11 @@ function RenderScout() {
 }
 function CommitEnlist() { window.tmpScouts.forEach(p => p.menu = 'spike'); G.team = G.team.concat(window.tmpScouts); window.tmpScouts = null; AutoOrder(); ChangeView('v-main'); UpdateUI(); Save(); }
 
-// v63.2: リベロ除外ロジックを追加
 function AutoOrder() { 
   const list = [...G.team].sort((a,b) => Object.values(b.stats).reduce((s,v)=>s+v,0) - Object.values(a.stats).reduce((s,v)=>s+v,0)); 
   let l = list.find(p=>p.pos==='L') || null; 
   G.libero = l; 
-  
-  // スタメン候補からリベロを完全に除外
   const others = list.filter(p => p.pos !== 'L'); 
-  
   let s = others.find(p=>p.pos==='S') || others[0]; 
   const atks = others.filter(p=>p.id!==s.id); 
   G.starters = [atks[0]||null, atks[1]||null, atks[2]||null, s||null, atks[3]||null, atks[4]||null]; 
@@ -1260,6 +1274,7 @@ function StartMatch(name, round, isNat) {
   if(!G.starters.every(s=>s)) { AutoOrder(); if(!G.starters.every(s=>s)) return alert("スタメン不足です。"); }
   G.match.active = true; G.match.name = name; G.match.round = round; G.match.isNat = isNat; 
   G.match.my=0; G.match.opp=0; G.match.court=[...G.starters]; G.match.mbBench=null; 
+  
   G.match.isMyServe = Math.random() < 0.5;
   G.match.flow = 0; G.match.to = 2; G.match.auto = false; UpdateTOBtn();
   const totalStats = G.starters.reduce((a,b)=>a+(Object.values(b.stats).reduce((x,y)=>x+y,0)/8),0)/6;
@@ -1269,7 +1284,16 @@ function StartMatch(name, round, isNat) {
   document.getElementById('m-info').innerText = `${name} ${isNat?'全国':''} ${round}回戦 (敵:${Math.floor(G.match.pow)})`;
   document.getElementById('m-log').innerHTML = ""; document.getElementById('m-end').style.display='none'; document.getElementById('btn-next-rd').style.display='none'; document.getElementById('btn-force').style.display='none';
   
-  Sound.playSE('whistle'); Sound.playBGM('match');
+  Sound.playSE('whistle'); 
+  
+  // v64.0: BGM Logic (Round 5 = Finals)
+  let bgmType = 'match';
+  if (G.match.round === 5) {
+      bgmType = 'finals';
+      Log("🔥 決勝戦！気合を入れろ！", "var(--accent)", true);
+  }
+  Sound.playBGM(bgmType);
+  
   CheckLibero(); DrawMatch(); 
   
   if(G.match.isMyServe) { Log("味方のサーブです。", "cyan"); NextCmd(); }
@@ -1490,7 +1514,7 @@ function AutoAction() {
   }
 }
 
-function Save() { const d = { team: G.team, date: G.date, lv: G.lv, next: G.match.next, winSpr: G.match.winSpr, played: G.match.played, sIds: G.starters.map(p=>p?p.id:null), lId: G.libero?G.libero.id:null, pracMonth: G.pracMonth, scouted: G.scouted, scoutDone: G.scoutDone, isMyServe: G.match.isMyServe }; localStorage.setItem("EIKAN_V63_2_FIX", JSON.stringify(d)); }
+function Save() { const d = { team: G.team, date: G.date, lv: G.lv, next: G.match.next, winSpr: G.match.winSpr, played: G.match.played, sIds: G.starters.map(p=>p?p.id:null), lId: G.libero?G.libero.id:null, pracMonth: G.pracMonth, scouted: G.scouted, scoutDone: G.scoutDone, isMyServe: G.match.isMyServe }; localStorage.setItem("EIKAN_V64_0_CLIMAX", JSON.stringify(d)); }
 
 function Log(msg, color, big=false) { 
   const div = document.createElement('div'); div.className = 'l-row' + (big?' log-big':''); 
@@ -1558,7 +1582,6 @@ function ShowOrder() {
     else if(idx===3) posLbl="後右(1)SRV"; 
     div.innerHTML = `<label>${posLbl}</label>`; 
     const sel = document.createElement('select'); 
-    // ★修正: リベロ以外の選手のみを表示する
     sel.innerHTML = `<option value="">---</option>` + G.team.filter(p=>p.pos!=='L').map(p=>`<option value="${p.id}" ${tempOrder[idx]&&tempOrder[idx].id===p.id?'selected':''}>${p.name} (${p.pos})</option>`).join(''); 
     sel.onchange = function() { 
       const nid = this.value; 
@@ -1580,7 +1603,6 @@ function ShowOrder() {
     list.appendChild(div); 
   } 
   const lsel = document.getElementById('sel-lib'); 
-  // ★修正: リベロの選手のみを表示する
   lsel.innerHTML = `<option value="">なし</option>` + G.team.filter(p=>p.pos==='L').map(p => `<option value="${p.id}" ${G.libero&&G.libero.id===p.id?'selected':''}>${p.name}</option>`).join(''); 
   document.getElementById('ui-order').style.display='flex'; 
 }
