@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="オレオレPop">
-<title>俺のオレンジコート - v65.0 Nightmare</title>
+<meta name="apple-mobile-web-app-title" content="オレオレHell">
+<title>俺のオレンジコート - v66.0 Hellfire</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,7 @@
 
 <script>
   // === アプリアイコン (SVG Data URI) ===
-  const ICON_SVG = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23ff9f43%22 stroke=%22%23333%22 stroke-width=%223%22/><path d=%22M50 3 C50 3 80 20 80 50 C80 80 50 97 50 97 M3 50 C3 50 20 20 50 20 C80 20 97 50 97 50 M3 50 C3 50 20 80 50 80 C80 80 97 50 97 50%22 stroke=%22white%22 stroke-width=%224%22 fill=%22none%22/></svg>`;
+  const ICON_SVG = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23ff4757%22 stroke=%22%23333%22 stroke-width=%223%22/><path d=%22M50 3 C50 3 80 20 80 50 C80 80 50 97 50 97 M3 50 C3 50 20 20 50 20 C80 20 97 50 97 50 M3 50 C3 50 20 80 50 80 C80 80 97 50 97 50%22 stroke=%22white%22 stroke-width=%224%22 fill=%22none%22/></svg>`;
   
   const link1 = document.createElement('link');
   link1.rel = 'icon';
@@ -27,7 +27,7 @@
   document.head.appendChild(link2);
 </script>
 <style>
-  /* === UI Design: Canva-like Pop Style (v63.0継承) === */
+  /* === UI Design: Canva-like Pop Style (Base v63.0) === */
   :root {
     --bg-color: #fff9f0; 
     --bg-dot: #ffeaa7;
@@ -1087,37 +1087,38 @@ let G = {
 };
 let tempOrder = [];
 
-// v65.0: 敵チーム名生成
+// v65.0: 敵チーム生成 (Hellfire Tweak)
 const E_PRE = ["北","南","東","西","中央","帝","王","龍","桜","白","黒","青","赤","光","闇","星","海","山","川","空","風","雷","火","水","土","金","木"];
 const E_SUF = ["工業","商業","実業","学園","学院","高校","大附属","北","南","東","西","第一","第二","第三"];
 const E_TYPE = [
-  {n:"バランス", atk:1.0, def:1.0}, 
-  {n:"攻撃特化", atk:1.2, def:0.8}, 
-  {n:"鉄壁", atk:0.8, def:1.3}, 
-  {n:"技巧派", atk:1.1, def:1.1} // 全体的に少し強い
+  {n:"バランス", atk:1.1, def:1.1}, 
+  {n:"攻撃特化", atk:1.5, def:0.8}, // 攻撃1.5倍 (脅威)
+  {n:"鉄壁", atk:0.9, def:1.6}, // 守備1.6倍 (絶望)
+  {n:"技巧派", atk:1.3, def:1.3}, 
+  {n:"王者", atk:1.4, def:1.4} // 隙がない
 ];
 
 function GenerateEnemy(round, isNat) {
   const name = E_PRE[Math.floor(Math.random()*E_PRE.length)] + E_SUF[Math.floor(Math.random()*E_SUF.length)];
   const type = E_TYPE[Math.floor(Math.random()*E_TYPE.length)];
   
-  // v65.0: 難易度曲線 (Nightmare Balance)
+  // v66.0 Hell Difficulty Curve
   let diffMult = 1.0;
   if(!isNat) {
-    if(round <= 2) diffMult = 0.9; // 予選序盤 (格下)
-    else if(round <= 4) diffMult = 1.05; // 予選中盤 (同格)
-    else diffMult = 1.25; // 予選決勝 (格上)
+    if(round <= 2) diffMult = 1.0; // 同格
+    else if(round <= 4) diffMult = 1.3; // 格上
+    else diffMult = 1.6; // 予選決勝 (ボス)
   } else {
-    if(round <= 4) diffMult = 1.35; // 全国 (超格上)
-    else diffMult = 1.5; // 全国決勝 (ラスボス)
+    if(round <= 4) diffMult = 1.8; // 全国 (超格上)
+    else diffMult = 2.0; // 全国決勝 (ラスボス)
   }
   
-  // プレイヤー基準の強さ算出
   const myTotal = G.starters.reduce((a,b)=>a+(Object.values(b.stats).reduce((x,y)=>x+y,0)/8),0)/6;
   const basePow = myTotal * diffMult;
   
-  // ゆらぎ
-  const pow = Math.floor(basePow + (Math.random()*10 - 5));
+  // 上振れするとさらに20%強い敵が出る
+  const fluctuation = Math.random() < 0.2 ? basePow * 0.2 : (Math.random()*10 - 5);
+  const pow = Math.floor(basePow + fluctuation);
   
   return { name: name, type: type, pow: pow };
 }
@@ -1128,7 +1129,7 @@ window.onload = function() {
     if(p) { p.innerHTML = `<div style="color:red; grid-column:span 2;">ERR: ${msg}</div>`; document.getElementById("btn-force").style.display = "block"; }
   };
   try {
-    const save = localStorage.getItem("EIKAN_V65_0_NIGHTMARE");
+    const save = localStorage.getItem("EIKAN_V66_0_HELL");
     if (save) {
       const d = JSON.parse(save); 
       d.team.forEach(p => {
@@ -1153,7 +1154,7 @@ window.onload = function() {
 
 function HardReset() { 
   if(confirm("全データを削除して初期化しますか？")) { 
-    localStorage.removeItem("EIKAN_V65_0_NIGHTMARE"); location.reload(); 
+    localStorage.removeItem("EIKAN_V66_0_HELL"); location.reload(); 
   } 
 }
 
@@ -1322,7 +1323,7 @@ function StartMatch(name, round, isNat) {
   }
   
   G.match.pow = enemyData.pow;
-  G.match.enemyType = enemyData.type; // Save type for logic use later if needed
+  G.match.enemyType = enemyData.type; 
   
   document.getElementById('ui-match').style.display = 'block'; 
   document.getElementById('m-info').innerHTML = `${name} ${isNat?'全国':''} ${round}回戦<br><span style="color:var(--lose); font-size:1.2em;">${enemyData.name}</span><br><span style="font-size:0.8em; color:#ccc;">タイプ:${enemyData.type.n} / 総合力:${enemyData.pow}</span>`;
@@ -1433,10 +1434,8 @@ function NextCmd() {
     if(HasSkill(p,'trust') && G.match.my < G.match.opp) { pow+=10; tec+=10; jmp+=10; spd+=10; }
     if(HasSkill(p,'dump') && lbl==='ツー') { pow+=7; tec+=7; } if(HasSkill(p,'feint')) tec+=8;
     const basePower = ((pow+tec+jmp+spd)/4)*condMod * (1.0 + flowBonus); 
-    // v65.0: Enemy Type Logic
     let enemyDef = G.match.pow * 0.9;
     if(G.match.enemyType && G.match.enemyType.def) enemyDef *= G.match.enemyType.def;
-    
     if(HasSkill(p,'blockout')) enemyDef *= 0.9; if(HasSkill(p,'circular')) enemyDef -= 10;
     let est = Math.floor(Math.min(99, Math.max(5, (20 + (basePower*1.2+hBonus)*(sTos/100)*0.8 - (enemyDef * 0.5)) * rate)));
     if(HasSkill(p,'feint')) est += 8; if(G.match.last===p.id) est-=15;
@@ -1505,7 +1504,6 @@ function AutoAction() {
   const zone = Math.floor(Math.random() * 3);
   const flowBonus = Math.max(0, G.match.flow * -0.1); 
   
-  // v65.0: Enemy Type Logic
   let typeMod = G.match.enemyType && G.match.enemyType.atk ? G.match.enemyType.atk : 1.0;
   let enP = G.match.pow * typeMod * (0.9 + Math.random()*0.3) * (1.0 + flowBonus);
   
@@ -1565,7 +1563,7 @@ function AutoAction() {
   }
 }
 
-function Save() { const d = { team: G.team, date: G.date, lv: G.lv, next: G.match.next, winSpr: G.match.winSpr, played: G.match.played, sIds: G.starters.map(p=>p?p.id:null), lId: G.libero?G.libero.id:null, pracMonth: G.pracMonth, scouted: G.scouted, scoutDone: G.scoutDone, isMyServe: G.match.isMyServe }; localStorage.setItem("EIKAN_V65_0_NIGHTMARE", JSON.stringify(d)); }
+function Save() { const d = { team: G.team, date: G.date, lv: G.lv, next: G.match.next, winSpr: G.match.winSpr, played: G.match.played, sIds: G.starters.map(p=>p?p.id:null), lId: G.libero?G.libero.id:null, pracMonth: G.pracMonth, scouted: G.scouted, scoutDone: G.scoutDone, isMyServe: G.match.isMyServe }; localStorage.setItem("EIKAN_V66_0_HELL", JSON.stringify(d)); }
 
 function Log(msg, color, big=false) { 
   const div = document.createElement('div'); div.className = 'l-row' + (big?' log-big':''); 
