@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="オレオレPop">
-<title>俺のオレンジコート - v63.1 Real Rules</title>
+<title>俺のオレンジコート - v63.2 Libero Fix</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -921,7 +921,6 @@ const Sound = (function() {
     }
   }
 
-  // Note Data
   const F = { C3:130.8, D3:146.8, E3:164.8, F3:174.6, G3:196.0, A3:220.0, B3:246.9, C4:261.6, D4:293.7, E4:329.6, F4:349.2, G4:392.0, A4:440.0, B4:493.9, C5:523.3, D5:587.3, E5:659.3, x:0 };
   
   const Daily = {
@@ -935,7 +934,7 @@ const Sound = (function() {
     tempo: 150, len: 64,
     mel: [F.A4,F.x, F.A4,F.B4, F.C5,F.x, F.A4,F.x, F.E5,F.x, F.D5,F.x, F.C5,F.B4, F.A4,F.G4, F.F4,F.x, F.F4,F.G4, F.A4,F.x, F.F4,F.x, F.C5,F.x, F.B4,F.x, F.A4,F.G4, F.F4,F.E4, F.D4,F.x, F.F4,F.x, F.A4,F.x, F.D5,F.x, F.B4,F.x, F.G4,F.x, F.D4,F.x, F.B3,F.x, F.E4,F.x, F.GS4,F.x, F.B4,F.x, F.E5,F.x, F.A4,F.x, F.x,F.x, F.x,F.x, F.x,F.x],
     bass: [F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.A3,F.A2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.F3,F.F2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.G3,F.G2, F.E3,F.E2, F.E3,F.E2, F.E3,F.E2, F.E3,F.E2, F.A3,F.A2, F.A3,F.A2, F.A3,F.x, F.A3,F.x],
-    drm: ['K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K','K','S','S', 'K',0,'S',0],
+    drm: ['K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K',0,'S',0, 'K','K','S','S', 'K',0,'S',0],
     arp: []
   };
 
@@ -1076,7 +1075,7 @@ window.onload = function() {
     if(p) { p.innerHTML = `<div style="color:red; grid-column:span 2;">ERR: ${msg}</div>`; document.getElementById("btn-force").style.display = "block"; }
   };
   try {
-    const save = localStorage.getItem("EIKAN_V63_1_REAL");
+    const save = localStorage.getItem("EIKAN_V63_2_FIX");
     if (save) {
       const d = JSON.parse(save); 
       d.team.forEach(p => {
@@ -1101,7 +1100,7 @@ window.onload = function() {
 
 function HardReset() { 
   if(confirm("全データを削除して初期化しますか？")) { 
-    localStorage.removeItem("EIKAN_V63_1_REAL"); location.reload(); 
+    localStorage.removeItem("EIKAN_V63_2_FIX"); location.reload(); 
   } 
 }
 
@@ -1150,11 +1149,18 @@ function RenderScout() {
 }
 function CommitEnlist() { window.tmpScouts.forEach(p => p.menu = 'spike'); G.team = G.team.concat(window.tmpScouts); window.tmpScouts = null; AutoOrder(); ChangeView('v-main'); UpdateUI(); Save(); }
 
+// v63.2: リベロ除外ロジックを追加
 function AutoOrder() { 
   const list = [...G.team].sort((a,b) => Object.values(b.stats).reduce((s,v)=>s+v,0) - Object.values(a.stats).reduce((s,v)=>s+v,0)); 
-  let l = list.find(p=>p.pos==='L') || list[list.length-1]; G.libero = l; 
-  const others = list.filter(p=>p.id!==l.id); let s = others.find(p=>p.pos==='S') || others[0]; 
-  const atks = others.filter(p=>p.id!==s.id); G.starters = [atks[0]||null, atks[1]||null, atks[2]||null, s||null, atks[3]||null, atks[4]||null]; 
+  let l = list.find(p=>p.pos==='L') || null; 
+  G.libero = l; 
+  
+  // スタメン候補からリベロを完全に除外
+  const others = list.filter(p => p.pos !== 'L'); 
+  
+  let s = others.find(p=>p.pos==='S') || others[0]; 
+  const atks = others.filter(p=>p.id!==s.id); 
+  G.starters = [atks[0]||null, atks[1]||null, atks[2]||null, s||null, atks[3]||null, atks[4]||null]; 
 }
 
 function RenderCard(p, parent, simple=false) {
@@ -1254,10 +1260,7 @@ function StartMatch(name, round, isNat) {
   if(!G.starters.every(s=>s)) { AutoOrder(); if(!G.starters.every(s=>s)) return alert("スタメン不足です。"); }
   G.match.active = true; G.match.name = name; G.match.round = round; G.match.isNat = isNat; 
   G.match.my=0; G.match.opp=0; G.match.court=[...G.starters]; G.match.mbBench=null; 
-  
-  // v63.1: サーブ権の初期化 (ランダム)
   G.match.isMyServe = Math.random() < 0.5;
-  
   G.match.flow = 0; G.match.to = 2; G.match.auto = false; UpdateTOBtn();
   const totalStats = G.starters.reduce((a,b)=>a+(Object.values(b.stats).reduce((x,y)=>x+y,0)/8),0)/6;
   let floor = 20; let mod = -10+Math.random()*20; if(name!=="練習試合") { if(round>=3 && !isNat) floor = 45 + round*5; else if(!isNat) floor = 25+round*5; if(isNat) floor = 75 + round*5; mod = (round-1)*10 - 5 + (isNat?40:0); }
@@ -1273,33 +1276,24 @@ function StartMatch(name, round, isNat) {
   else { Log("相手のサーブです。", "var(--lose)"); AutoAction(); }
 }
 
-// v63.1: リベロ交代ロジックの修正
 function CheckLibero() { 
   if(!G.libero) return; 
   const c = G.match.court; 
-  
-  // 1. 前衛にリベロがいたら、控えMBと戻す
   [0, 1, 2].forEach(i => {
     if(c[i].id === G.libero.id && G.match.mbBench) {
         c[i] = G.match.mbBench; 
         G.match.mbBench = null;
     }
   });
-
-  // 2. 後衛(Pos1,6,5 = idx3,4,5)のMBをリベロに変える
-  // ※Pos1(idx3)はサーブ順なので、MBが打つルールにする(リベロは打てない)
-  // つまり idx4(Pos6) か idx5(Pos5) にMBが来たら交代
   [4, 5].forEach(i => {
     if(c[i].pos === 'MB' && c[i].id !== G.libero.id) {
-        G.match.mbBench = c[i]; // MBをベンチへ
-        c[i] = G.libero; // リベロIN
+        G.match.mbBench = c[i]; 
+        c[i] = G.libero; 
     }
   });
 }
 
-// v63.1: ローテーションロジックの修正
 function Rotate() { 
-  // ローテ前にリベロを元に戻す(データの整合性のため)
   if(G.match.mbBench) {
       const c = G.match.court;
       const idx = c.findIndex(p => p.id === G.libero.id);
@@ -1308,11 +1302,8 @@ function Rotate() {
           G.match.mbBench = null;
       }
   }
-
   const c = G.match.court; 
-  // [0,1,2,3,4,5] -> 時計回り -> [5,0,1,2,3,4]
   c.unshift(c.pop()); 
-  
   CheckLibero(); 
 }
 
@@ -1394,12 +1385,10 @@ function NextCmd() {
 }
 function ForceNext() { AutoAction(); }
 
-// v63.1: 修正 (サーブ権の概念導入)
 function Action(id, est) {
   document.getElementById('m-cmd').innerHTML = ""; document.getElementById('m-state').innerText = "Rally..."; G.match.last = id;
-  const srv = G.match.court[3]; // Server is Pos 1 (index 3)
+  const srv = G.match.court[3]; 
   
-  // 自サーブの場合の処理
   if(G.match.isMyServe) {
       let srvS = srv.stats.srv, srvP = srv.stats.pow, srvT = srv.stats.tec;
       if(HasSkill(srv,'spksrv')) { srvS+=10; srvP+=10; srvT+=10; } if(HasSkill(srv,'jmpfloat')) { srvS+=5; srvP+=5; srvT+=5; } if(HasSkill(srv,'float')) srvS+=5; 
@@ -1417,7 +1406,6 @@ function Action(id, est) {
       }
   }
   
-  // 通常攻撃処理
   const s = [G.match.court[3],G.match.court[4],G.match.court[5],G.match.court[0],G.match.court[1],G.match.court[2]].find(p=>p.pos==='S') || G.match.court[1];
   if(s) {
     let sMiss = 0.15 - ((s.stats.tec+s.stats.tos)*GetCondVal(s)/2000);
@@ -1444,21 +1432,13 @@ function Action(id, est) {
 
 function AutoAction() {
   document.getElementById('m-cmd').innerHTML = "";
-  // 相手の攻撃
   const zone = Math.floor(Math.random() * 3);
   const flowBonus = Math.max(0, G.match.flow * -0.1); 
   let enP = G.match.pow * (0.9 + Math.random()*0.3) * (1.0 + flowBonus);
   
-  // v63.1: 相手サーブの場合
   if(!G.match.isMyServe) {
-      if(Math.random() < 0.1) {
-          Log("相手のサービスエース...", "var(--lose)");
-          Score(false, false); return;
-      }
-      if(Math.random() < 0.1) {
-          Log("相手のサーブミス！", "var(--ok)");
-          Score(true, false); return;
-      }
+      if(Math.random() < 0.1) { Log("相手のサービスエース...", "var(--lose)"); Score(false, false); return; }
+      if(Math.random() < 0.1) { Log("相手のサーブミス！", "var(--ok)"); Score(true, false); return; }
   }
 
   const blk = G.match.court[zone]; const mb = G.match.court[1]; 
@@ -1510,7 +1490,7 @@ function AutoAction() {
   }
 }
 
-function Save() { const d = { team: G.team, date: G.date, lv: G.lv, next: G.match.next, winSpr: G.match.winSpr, played: G.match.played, sIds: G.starters.map(p=>p?p.id:null), lId: G.libero?G.libero.id:null, pracMonth: G.pracMonth, scouted: G.scouted, scoutDone: G.scoutDone, isMyServe: G.match.isMyServe }; localStorage.setItem("EIKAN_V63_1_REAL", JSON.stringify(d)); }
+function Save() { const d = { team: G.team, date: G.date, lv: G.lv, next: G.match.next, winSpr: G.match.winSpr, played: G.match.played, sIds: G.starters.map(p=>p?p.id:null), lId: G.libero?G.libero.id:null, pracMonth: G.pracMonth, scouted: G.scouted, scoutDone: G.scoutDone, isMyServe: G.match.isMyServe }; localStorage.setItem("EIKAN_V63_2_FIX", JSON.stringify(d)); }
 
 function Log(msg, color, big=false) { 
   const div = document.createElement('div'); div.className = 'l-row' + (big?' log-big':''); 
@@ -1557,18 +1537,63 @@ function FinishMatch() {
   Save(); 
 }
 function EndMatchUI() { document.getElementById('ui-match').style.display='none'; UpdateUI(); Sound.playBGM('daily'); }
-function ShowOrder() { tempOrder = [...G.starters]; const list = document.getElementById('ord-court'); list.innerHTML = ""; const mapIdx = [0, 1, 2, 5, 4, 3]; for(let i=0; i<6; i++) { const idx = mapIdx[i]; const isBack = i >= 3; const div = document.createElement('div'); div.className = "pos-edit" + (isBack ? " back" : ""); let posLbl = ""; if(idx===0) posLbl="前左(4)"; else if(idx===1) posLbl="前中(3)"; else if(idx===2) posLbl="前右(2)"; else if(idx===5) posLbl="後左(5)"; else if(idx===4) posLbl="後中(6)"; else if(idx===3) posLbl="後右(1)SRV"; div.innerHTML = `<label>${posLbl}</label>`; const sel = document.createElement('select'); sel.innerHTML = `<option value="">---</option>` + G.team.filter(p=>p.pos!=='L').map(p=>`<option value="${p.id}" ${tempOrder[idx]&&tempOrder[idx].id===p.id?'selected':''}>${p.name} (${p.pos})</option>`).join(''); sel.onchange = function() { const nid = this.value; if(nid) { const dup = tempOrder.findIndex((p, x) => x!==idx && p && p.id===nid); if(dup !== -1) { const old = tempOrder[idx]; tempOrder[idx] = G.team.find(p=>p.id===nid); tempOrder[dup] = old; ShowOrder(); return; } tempOrder[idx] = G.team.find(p=>p.id===nid); } else { tempOrder[idx] = null; } }; div.appendChild(sel); list.appendChild(div); } const lsel = document.getElementById('sel-lib'); lsel.innerHTML = `<option value="">なし</option>` + G.team.filter(p=>p.pos==='L').map(p => `<option value="${p.id}" ${G.libero&&G.libero.id===p.id?'selected':''}>${p.name}</option>`).join(''); document.getElementById('ui-order').style.display='flex'; }
+
+// v63.2: 修正 (リベロ除外)
+function ShowOrder() { 
+  tempOrder = [...G.starters]; 
+  const list = document.getElementById('ord-court'); 
+  list.innerHTML = ""; 
+  const mapIdx = [0, 1, 2, 5, 4, 3]; 
+  for(let i=0; i<6; i++) { 
+    const idx = mapIdx[i]; 
+    const isBack = i >= 3; 
+    const div = document.createElement('div'); 
+    div.className = "pos-edit" + (isBack ? " back" : ""); 
+    let posLbl = ""; 
+    if(idx===0) posLbl="前左(4)"; 
+    else if(idx===1) posLbl="前中(3)"; 
+    else if(idx===2) posLbl="前右(2)"; 
+    else if(idx===5) posLbl="後左(5)"; 
+    else if(idx===4) posLbl="後中(6)"; 
+    else if(idx===3) posLbl="後右(1)SRV"; 
+    div.innerHTML = `<label>${posLbl}</label>`; 
+    const sel = document.createElement('select'); 
+    // ★修正: リベロ以外の選手のみを表示する
+    sel.innerHTML = `<option value="">---</option>` + G.team.filter(p=>p.pos!=='L').map(p=>`<option value="${p.id}" ${tempOrder[idx]&&tempOrder[idx].id===p.id?'selected':''}>${p.name} (${p.pos})</option>`).join(''); 
+    sel.onchange = function() { 
+      const nid = this.value; 
+      if(nid) { 
+        const dup = tempOrder.findIndex((p, x) => x!==idx && p && p.id===nid); 
+        if(dup !== -1) { 
+          const old = tempOrder[idx]; 
+          tempOrder[idx] = G.team.find(p=>p.id===nid); 
+          tempOrder[dup] = old; 
+          ShowOrder(); 
+          return; 
+        } 
+        tempOrder[idx] = G.team.find(p=>p.id===nid); 
+      } else { 
+        tempOrder[idx] = null; 
+      } 
+    }; 
+    div.appendChild(sel); 
+    list.appendChild(div); 
+  } 
+  const lsel = document.getElementById('sel-lib'); 
+  // ★修正: リベロの選手のみを表示する
+  lsel.innerHTML = `<option value="">なし</option>` + G.team.filter(p=>p.pos==='L').map(p => `<option value="${p.id}" ${G.libero&&G.libero.id===p.id?'selected':''}>${p.name}</option>`).join(''); 
+  document.getElementById('ui-order').style.display='flex'; 
+}
+
 function CommitOrder() { G.starters = [...tempOrder]; const lid = document.getElementById('sel-lib').value; G.libero = lid ? G.team.find(p=>p.id===lid) : null; document.getElementById('ui-order').style.display='none'; UpdateUI(); Save(); }
 function CloseOrder() { CommitOrder(); }
 
-// v63.1: 修正 (サイドアウト制)
 function Score(isMy, isAtk) {
   if(isMy) { 
     G.match.my++; 
     G.match.flow = Math.max(0, G.match.flow) + 1; 
     Effect('flash'); 
     
-    // サイドアウト（相手サーブから自分の得点）ならローテーション
     if (!G.match.isMyServe) {
         Rotate();
         G.match.isMyServe = true;
@@ -1584,15 +1609,13 @@ function Score(isMy, isAtk) {
   if(G.match.my>=25 && G.match.my-G.match.opp>=2) { FinishMatch(); return; }
   if(G.match.opp>=25 && G.match.opp-G.match.my>=2) { FinishMatch(); return; }
   
-  // 次の展開 (サーブ権に応じて分岐)
   if (G.match.isMyServe) {
-      if (isMy) { // 連続得点(自分のサーブ継続)
+      if (isMy) { 
           setTimeout(NextCmd, 800); 
-      } else { // 相手の得点(相手サーブへ)
+      } else { 
           setTimeout(AutoAction, 800);
       }
   } else {
-      // 相手サーブ継続
       setTimeout(AutoAction, 800);
   }
 }
